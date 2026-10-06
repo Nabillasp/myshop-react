@@ -8,7 +8,7 @@ export const products = [
     category: 1,
     category_name: "Electronics",
     rating: 4,
-    img: "https://picsum.photos/seed/headphones/300/200",
+    img: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&h=400",
   },
   {
     id: 2,
@@ -19,7 +19,7 @@ export const products = [
     category: 1,
     category_name: "Electronics",
     rating: 5,
-    img: "https://picsum.photos/seed/watch/300/200",
+    img: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&h=400",
   },
   {
     id: 3,
@@ -30,7 +30,7 @@ export const products = [
     category: 1,
     category_name: "Electronics",
     rating: 4,
-    img: "https://picsum.photos/seed/keyboard/300/200",
+    img: "https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=600&h=400",
   },
   {
     id: 4,
@@ -41,7 +41,7 @@ export const products = [
     category: 1,
     category_name: "Electronics",
     rating: 4,
-    img: "https://picsum.photos/seed/mouse/300/200",
+    img: "https://images.unsplash.com/photo-1527814050087-3793815479db?auto=format&fit=crop&w=600&h=400",
   },
   {
     id: 5,
@@ -52,7 +52,7 @@ export const products = [
     category: 2,
     category_name: "Fashion",
     rating: 5,
-    img: "https://picsum.photos/seed/hoodie/300/200",
+    img: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=600&h=400",
   },
   {
     id: 6,
@@ -63,7 +63,7 @@ export const products = [
     category: 2,
     category_name: "Fashion",
     rating: 4,
-    img: "https://picsum.photos/seed/sneakers/300/200",
+    img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&h=400",
   },
   {
     id: 7,
@@ -74,7 +74,7 @@ export const products = [
     category: 3,
     category_name: "Kecantikan",
     rating: 4,
-    img: "https://picsum.photos/seed/facewash/300/200",
+    img: "https://images.unsplash.com/photo-1556228578-8c89e6adf883?auto=format&fit=crop&w=600&h=400",
   },
   {
     id: 8,
@@ -85,6 +85,6 @@ export const products = [
     category: 3,
     category_name: "Kecantikan",
     rating: 5,
-    img: "https://picsum.photos/seed/moisturizer/300/200",
+    img: "https://images.unsplash.com/photo-1611930022073-b7a4ba5fcccd?auto=format&fit=crop&w=600&h=400",
   },
 ];

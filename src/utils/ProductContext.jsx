@@ -1,82 +1,197 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import { products as initialProducts } from "./data";
+import { createContext, useContext, useState } from "react";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
+import toast from "react-hot-toast";
+import apiClient from "./apiClient";
 
 const ProductContext = createContext(null);
 
-export function ProductProvider({ children }) {
-  const [products, setProducts] = useState(() => {
-    const savedProducts = localStorage.getItem("myshop_products");
+const resolveProductImageUrl = (img) => {
+  if (!img) return null;
+  if (img.startsWith("http://") || img.startsWith("https://")) {
+    return img;
+  }
 
-    if (savedProducts) {
-      return JSON.parse(savedProducts);
-    }
+  const customStorageUrl = import.meta.env.VITE_STORAGE_URL;
+  if (customStorageUrl) {
+    return `${customStorageUrl.replace(/\/+$/, "")}/${img.replace(/^\/+/, "")}`;
+  }
 
-    return initialProducts;
+  const rawApiUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
+  const backendBaseUrl = rawApiUrl.replace(/\/api\/?$/, "");
+  return `${backendBaseUrl}/storage/${img.replace(/^\/+/, "")}`;
+};
+
+const normalizeProduct = (product) => ({
+  ...product,
+  id: product.product_id,
+  category_name: product.category,
+  img: resolveProductImageUrl(product.img),
+});
+
+const getProducts = async (params) => {
+  const response = await apiClient.get("/products", {
+    params: {
+      page: params.page,
+      limit: params.limit,
+      keyword: params.keyword || undefined,
+      category_id: params.categoryId || undefined,
+    },
   });
 
-  useEffect(() => {
-    localStorage.setItem(
-      "myshop_products",
-      JSON.stringify(products)
-    );
-  }, [products]);
+  return {
+    products: (response.data.data || []).map(normalizeProduct),
+    pagination: response.data.meta || {},
+  };
+};
 
-  const addProduct = (product) => {
-    const newProduct = {
-      ...product,
-      id: Date.now(),
-      slug: product.name
-        .toLowerCase()
-        .replace(/\s+/g, "-"),
-      rating: 0,
-      img: `https://picsum.photos/seed/${Date.now()}/300/200`,
-    };
+export function ProductProvider({ children }) {
+  const queryClient = useQueryClient();
 
-    setProducts((currentProducts) => [
-      ...currentProducts,
-      newProduct,
-    ]);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(5);
+  const [keyword, setKeyword] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["products", page, limit, keyword, categoryId],
+    queryFn: () =>
+      getProducts({
+        page,
+        limit,
+        keyword,
+        categoryId,
+      }),
+    placeholderData: (previousData) => previousData,
+  });
+
+  const products = data?.products || [];
+  const pagination = data?.pagination || {};
+
+  const applyFilters = ({ keyword: newKeyword, categoryId: newCategoryId }) => {
+    setKeyword(newKeyword ?? "");
+    setCategoryId(newCategoryId ?? "");
+    setPage(1);
   };
 
-  const updateProduct = (id, updatedProduct) => {
-    setProducts((currentProducts) =>
-      currentProducts.map((product) =>
-        product.id === id
-          ? {
-              ...product,
-              ...updatedProduct,
-            }
-          : product
-      )
-    );
+  const resetFilters = () => {
+    setKeyword("");
+    setCategoryId("");
+    setPage(1);
   };
 
-  const deleteProduct = (id) => {
-    setProducts((currentProducts) =>
-      currentProducts.filter(
-        (product) => product.id !== id
-      )
-    );
-  };
+  const addMutation = useMutation({
+    mutationFn: async (product) => {
+      const formData = new FormData();
 
-  const reduceStock = (cartItems) => {
-    setProducts((currentProducts) =>
-      currentProducts.map((product) => {
-        const cartItem = cartItems.find(
-          (item) => item.id === product.id
+      Object.entries(product).forEach(([key, value]) => {
+        if (
+          value !== undefined &&
+          value !== null &&
+          key !== "category_name"
+        ) {
+          formData.append(
+            key === "category" ? "category_id" : key,
+            value
+          );
+        }
+      });
+
+      const response = await apiClient.post("/products", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      toast.success("Produk berhasil ditambahkan");
+    },
+    onError: () => {
+      toast.error("Gagal menambahkan produk");
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, product }) => {
+      const formData = new FormData();
+
+      Object.entries(product).forEach(([key, value]) => {
+        if (
+          value !== undefined &&
+          value !== null &&
+          key !== "category_name"
+        ) {
+          formData.append(
+            key === "category" ? "category_id" : key,
+            value
+          );
+        }
+      });
+
+      const response = await apiClient.post(
+        `/products/${id}?_method=PUT`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      toast.success("Produk berhasil diperbarui");
+    },
+    onError: () => {
+      toast.error("Gagal memperbarui produk");
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id) => {
+      return apiClient.delete(`/products/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      toast.success("Produk berhasil dihapus");
+    },
+    onError: () => {
+      toast.error("Gagal menghapus produk");
+    },
+  });
+
+  const addProduct = (product) => addMutation.mutateAsync(product);
+
+  const updateProduct = (id, product) =>
+    updateMutation.mutateAsync({ id, product });
+
+  const deleteProduct = (id) => deleteMutation.mutateAsync(id);
+
+  const reduceStock = async (cartItems) => {
+    await Promise.all(
+      cartItems.map((item) => {
+        const currentProduct = products.find(
+          (product) => product.id === item.id
         );
 
-        if (!cartItem) {
-          return product;
-        }
+        if (!currentProduct) return Promise.resolve();
 
-        return {
-          ...product,
-          stock: Math.max(
-            0,
-            product.stock - cartItem.qty
-          ),
-        };
+        return updateProduct(item.id, {
+          stock: Math.max(0, currentProduct.stock - item.qty),
+        });
       })
     );
   };
@@ -85,10 +200,24 @@ export function ProductProvider({ children }) {
     <ProductContext.Provider
       value={{
         products,
+        pagination,
+        page,
+        limit,
+        keyword,
+        categoryId,
+        setPage,
+        setLimit,
+        setKeyword,
+        setCategoryId,
+        applyFilters,
+        resetFilters,
         addProduct,
         updateProduct,
         deleteProduct,
         reduceStock,
+        isLoading,
+        isError,
+        error,
       }}
     >
       {children}

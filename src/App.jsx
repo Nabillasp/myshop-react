@@ -10,10 +10,14 @@ import AdminLayout from "./layouts/AdminLayout";
 import AdminDashboard from "./pages/adminpages/AdminDashboard";
 import ProductManagement from "./pages/adminpages/ProductManagement.jsx";
 import AboutPage from "./pages/adminpages/AboutPage";
+import CategoryManagement from "./pages/adminpages/CategoryManagement";
+import Login from "./pages/Login";
 
 export default function App() {
   return (
     <Routes>
+      <Route path="/login" element={<Login />} />
+
       <Route path="/" element={<MainLayout />}>
         <Route index element={<Dashboard />} />
         <Route path="product/:id" element={<ProductDetail />} />
@@ -22,15 +26,10 @@ export default function App() {
       </Route>
 
       <Route path="/admin" element={<AdminLayout />}>
+        <Route path="categories" element={<CategoryManagement />} />
         <Route path="dashboard" element={<AdminDashboard />} />
-        <Route
-          path="products"
-          element={<ProductManagement />}
-        />
-        <Route
-          path="orders"
-          element={<OrderManagement />}
-        />
+        <Route path="products" element={<ProductManagement />} />
+        <Route path="orders" element={<OrderManagement />} />
         <Route path="about" element={<AboutPage />} />
       </Route>
     </Routes>

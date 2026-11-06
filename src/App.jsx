@@ -12,6 +12,7 @@ import ProductManagement from "./pages/adminpages/ProductManagement.jsx";
 import AboutPage from "./pages/adminpages/AboutPage";
 import CategoryManagement from "./pages/adminpages/CategoryManagement";
 import Login from "./pages/Login";
+import ProductForm from "./pages/adminpages/ProductForm";
 
 export default function App() {
   return (
@@ -31,6 +32,7 @@ export default function App() {
         <Route path="products" element={<ProductManagement />} />
         <Route path="orders" element={<OrderManagement />} />
         <Route path="about" element={<AboutPage />} />
+        <Route path="products/create" element={<ProductForm />} />
       </Route>
     </Routes>
   );

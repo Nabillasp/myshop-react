@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useProduct } from "../../utils/ProductContext";
 import { useCategory } from "../../utils/CategoryContext";
 
@@ -19,6 +20,8 @@ const formatRupiah = (value) =>
   }).format(Number(value || 0));
 
 export default function ProductManagement() {
+  const navigate = useNavigate();
+
   const {
     products,
     pagination,
@@ -28,7 +31,6 @@ export default function ProductManagement() {
     setLimit,
     applyFilters,
     resetFilters,
-    addProduct,
     updateProduct,
     deleteProduct,
     isLoading,
@@ -50,13 +52,6 @@ export default function ProductManagement() {
   const lastPage = pagination.last_page ?? 1;
   const from = pagination.from ?? (products.length ? 1 : 0);
   const to = pagination.to ?? products.length;
-
-  const openAddModal = () => {
-    setEditingId(null);
-    setForm(emptyForm);
-    setPreview("");
-    setShowModal(true);
-  };
 
   const openEditModal = (product) => {
     setEditingId(product.id);
@@ -81,6 +76,7 @@ export default function ProductManagement() {
 
   const handleChange = (event) => {
     const { name, value } = event.target;
+
     setForm((previous) => ({
       ...previous,
       [name]: value,
@@ -127,17 +123,11 @@ export default function ProductManagement() {
 
     try {
       setIsSaving(true);
-
-      if (editingId) {
-        await updateProduct(editingId, payload);
-      } else {
-        await addProduct(payload);
-      }
-
+      await updateProduct(editingId, payload);
       closeModal();
     } catch (error) {
       console.error(error);
-      alert("Produk gagal disimpan. Periksa kembali data dan koneksi API.");
+      alert("Produk gagal diperbarui. Periksa kembali data dan koneksi API.");
     } finally {
       setIsSaving(false);
     }
@@ -196,7 +186,7 @@ export default function ProductManagement() {
 
           <button
             type="button"
-            onClick={openAddModal}
+            onClick={() => navigate("/admin/products/create")}
             className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
           >
             + Tambah Produk
@@ -467,10 +457,10 @@ export default function ProductManagement() {
             <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5">
               <div>
                 <h2 className="text-lg font-bold text-slate-800">
-                  {editingId ? "Edit Produk" : "Tambah Produk"}
+                  Edit Produk
                 </h2>
                 <p className="mt-1 text-xs text-slate-500">
-                  Lengkapi informasi produk di bawah ini.
+                  Perbarui informasi produk di bawah ini.
                 </p>
               </div>
 
@@ -479,7 +469,7 @@ export default function ProductManagement() {
                 onClick={closeModal}
                 className="rounded-lg px-3 py-2 text-slate-500 hover:bg-slate-100"
               >
-                ✕
+                ×
               </button>
             </div>
 
@@ -604,11 +594,7 @@ export default function ProductManagement() {
                   disabled={isSaving}
                   className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isSaving
-                    ? "Menyimpan..."
-                    : editingId
-                      ? "Simpan Perubahan"
-                      : "Tambah Produk"}
+                  {isSaving ? "Menyimpan..." : "Simpan Perubahan"}
                 </button>
               </div>
             </form>
